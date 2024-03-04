@@ -1,8 +1,9 @@
 ---
-title: "R Notebook"
+title: "Animint2 - Chapter 2"
 output: html_notebook
 ---
-
+# Package installing and loading
+At first, I install the package `animint2` and load it.
 ```{r}
 if(!requireNamespace("animint2")) install.packages("animint2")
 library(animint2)
@@ -10,23 +11,30 @@ library(animint2)
 
 
 # Translating plot sketches into ggplots
+I will load the dataset WorldBank for visualization
 ```{r}
 data(WorldBank, package="animint2")
+# Remove " (all income levels)" in region field
 WorldBank$Region <- sub(" (all income levels)", "", WorldBank$region, fixed=TRUE)
+# Plot some final records of the dataset
 tail(WorldBank)
 ```
 
 ```{r}
+# How many rows and columns in this datasets?
 dim(WorldBank)
 ```
 
 
 ```{r}
+# Filter out records in 1975
 WorldBank1975 <- subset(WorldBank, year==1975)
+# Plot some early found records in 1975
 head(WorldBank1975)
 ```
 
 ```{r}
+# Plot the relationship between life expectancy and fertility rate of countries in 1975
 scatter <- ggplot()+
   geom_point(
     mapping=aes(x=life.expectancy, y=fertility.rate, color=Region),
@@ -38,6 +46,7 @@ animint(scatter)
 
 # Multi-layer data visualization (multiple geoms)
 ```{r}
+# This block visualizes the trend of fertility rate and life expectancy between 1970 and 1975
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
 two.layers <- scatter+
   geom_path(aes(
@@ -54,6 +63,7 @@ viz.two.layers
 ```
 
 ```{r}
+# This command adds the name of countries to the plot as an overlay layer
 three.layers <- two.layers+
   geom_text(aes(
     x=life.expectancy,
@@ -69,6 +79,7 @@ animint(three.layers)
 # Multi-plot data visualization
 
 ```{r}
+# Now we assign a new element named `timeSeries` to visualize the trend of fertility rate over years
 viz.two.plots <- viz.two.layers
 viz.two.plots$timeSeries <- ggplot()+
   geom_line(aes(
@@ -80,19 +91,23 @@ viz.two.plots$timeSeries <- ggplot()+
 ```
 
 ```{r}
+# After assigned, `viz.two.plots` has two elements: twolayers and timeSeries
 summary(viz.two.plots)
 ```
 
 ```{r}
+# Draw all the plots
 viz.two.plots$twolayers
 viz.two.plots$timeSeries
 
 viz.two.plots
 ```
 
-# Exercise: use animint to create a data viz with three plots, by creating a list with three ggplots.
+# Exercise: Using animint to create a data viz with three plots, by creating a list with three ggplots.
 
 ```{r}
+# In this exercise, I re-use the above `viz.two.plots` and add a new element named `population` to the end.
+# The new element will reveal the changes in population by country.
 viz.three.plots <- viz.two.plots
 viz.three.plots$population <- ggplot()+
   geom_point(aes(
@@ -103,6 +118,12 @@ viz.three.plots$population <- ggplot()+
 ```
 
 ```{r}
+# After assigned, `viz.three.plots` has three elements: twolayers and timeSeries
+summary(viz.three.plots)
+```
+
+```{r}
+# Draw all the plots
 viz.three.plots$twolayers
 viz.three.plots$timeSeries
 viz.three.plots$population
@@ -114,12 +135,13 @@ viz.three.plots
 ## Different geoms in each panel (aligned axes)
 
 ```{r}
+# In case we want to make the same y-axis for all plots
 add.x.var <- function(df, x.var){
   data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
 }
 (viz.aligned <- animint(
   scatter=ggplot()+
-    theme_animint(width=600)+
+    theme_animint(width=1000)+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=Region),
                data=add.x.var(WorldBank1975, "life expectancy"))+
     geom_path(aes(x=life.expectancy, y=fertility.rate, color=Region,
@@ -138,6 +160,7 @@ viz.aligned$scatter
 
 ## Same geoms in each panel (compare data subsets)
 ```{r}
+# I create a table that contains data in three years: 1975, 1985, 1995
 show.point.list <- list()
 show.path.list <- list()
 for(show.year in c(1975, 1985, 1995)){
@@ -151,6 +174,7 @@ show.path <- do.call(rbind, show.path.list)
 ```
 
 ```{r}
+# Now we will visualize the relationship between fertility rate and life expectancy in (1970-1975), (1980-1985), and (1990-1995).
 viz.panels <- list(
   scatter=ggplot()+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=Region),
