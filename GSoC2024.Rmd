@@ -1,0 +1,169 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+if(!requireNamespace("animint2")) install.packages("animint2")
+library(animint2)
+```
+
+
+# Translating plot sketches into ggplots
+```{r}
+data(WorldBank, package="animint2")
+WorldBank$Region <- sub(" (all income levels)", "", WorldBank$region, fixed=TRUE)
+tail(WorldBank)
+```
+
+```{r}
+dim(WorldBank)
+```
+
+
+```{r}
+WorldBank1975 <- subset(WorldBank, year==1975)
+head(WorldBank1975)
+```
+
+```{r}
+scatter <- ggplot()+
+  geom_point(
+    mapping=aes(x=life.expectancy, y=fertility.rate, color=Region),
+    data=WorldBank1975)
+
+scatter
+animint(scatter)
+```
+
+# Multi-layer data visualization (multiple geoms)
+```{r}
+WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
+two.layers <- scatter+
+  geom_path(aes(
+    x=life.expectancy,
+    y=fertility.rate,
+    color=Region,
+    group=country),
+    data=WorldBankBefore1975)
+
+two.layers
+
+(viz.two.layers <- animint(two.layers))
+viz.two.layers
+```
+
+```{r}
+three.layers <- two.layers+
+  geom_text(aes(
+    x=life.expectancy,
+    y=fertility.rate,
+    color=Region,
+    label=country),
+    data=WorldBank1975)
+
+three.layers
+animint(three.layers)
+```
+
+# Multi-plot data visualization
+
+```{r}
+viz.two.plots <- viz.two.layers
+viz.two.plots$timeSeries <- ggplot()+
+  geom_line(aes(
+    x=year,
+    y=fertility.rate,
+    color=Region,
+    group=country),
+    data=WorldBank)
+```
+
+```{r}
+summary(viz.two.plots)
+```
+
+```{r}
+viz.two.plots$twolayers
+viz.two.plots$timeSeries
+
+viz.two.plots
+```
+
+# Exercise: use animint to create a data viz with three plots, by creating a list with three ggplots.
+
+```{r}
+viz.three.plots <- viz.two.plots
+viz.three.plots$population <- ggplot()+
+  geom_point(aes(
+    x=year,
+    y=population,
+    color=Region),
+    data=WorldBankBefore1975)
+```
+
+```{r}
+viz.three.plots$twolayers
+viz.three.plots$timeSeries
+viz.three.plots$population
+
+viz.three.plots
+```
+
+# Multi-panel data visualization (facets)
+## Different geoms in each panel (aligned axes)
+
+```{r}
+add.x.var <- function(df, x.var){
+  data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
+}
+(viz.aligned <- animint(
+  scatter=ggplot()+
+    theme_animint(width=600)+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=Region),
+               data=add.x.var(WorldBank1975, "life expectancy"))+
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=Region,
+                  group=country),
+              data=add.x.var(WorldBankBefore1975, "life expectancy"))+
+    geom_line(aes(x=year, y=fertility.rate, color=Region, group=country),
+              data=add.x.var(WorldBank, "year"))+
+    xlab("")+
+    facet_grid(. ~ x.var, scales="free")+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))
+  ))
+
+viz.aligned$scatter
+```
+
+## Same geoms in each panel (compare data subsets)
+```{r}
+show.point.list <- list()
+show.path.list <- list()
+for(show.year in c(1975, 1985, 1995)){
+  show.point.list[[paste(show.year)]] <- data.frame(
+    show.year, subset(WorldBank, year==show.year))
+  show.path.list[[paste(show.year)]] <- data.frame(
+    show.year, subset(WorldBank, show.year - 5 <= year & year <= show.year))
+}
+show.point <- do.call(rbind, show.point.list)
+show.path <- do.call(rbind, show.path.list)
+```
+
+```{r}
+viz.panels <- list(
+  scatter=ggplot()+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=Region),
+               data=show.point)+
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=Region,
+                  group=country),
+              data=show.path)+
+    facet_grid(. ~ show.year)+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))
+  )
+
+viz.panels$scatter
+structure(viz.panels, class="animint")
+```
+
