@@ -1,17 +1,23 @@
 ---
 title: "Animint2 - Chapter 2"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
+
 # Package installing and loading
+
 At first, I install the package `animint2` and load it.
+
 ```{r}
 if(!requireNamespace("animint2")) install.packages("animint2")
 library(animint2)
 ```
 
-
 # Translating plot sketches into ggplots
+
 I will load the dataset WorldBank for visualization
+
 ```{r}
 data(WorldBank, package="animint2")
 # Remove " (all income levels)" in region field
@@ -24,7 +30,6 @@ tail(WorldBank)
 # How many rows and columns in this datasets?
 dim(WorldBank)
 ```
-
 
 ```{r}
 # Filter out records in 1975
@@ -45,6 +50,7 @@ animint(scatter)
 ```
 
 # Multi-layer data visualization (multiple geoms)
+
 ```{r}
 # This block visualizes the trend of fertility rate and life expectancy between 1970 and 1975
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
@@ -56,10 +62,7 @@ two.layers <- scatter+
     group=country),
     data=WorldBankBefore1975)
 
-two.layers
-
 (viz.two.layers <- animint(two.layers))
-viz.two.layers
 ```
 
 ```{r}
@@ -72,7 +75,6 @@ three.layers <- two.layers+
     label=country),
     data=WorldBank1975)
 
-three.layers
 animint(three.layers)
 ```
 
@@ -97,9 +99,6 @@ summary(viz.two.plots)
 
 ```{r}
 # Draw all the plots
-viz.two.plots$twolayers
-viz.two.plots$timeSeries
-
 viz.two.plots
 ```
 
@@ -124,14 +123,11 @@ summary(viz.three.plots)
 
 ```{r}
 # Draw all the plots
-viz.three.plots$twolayers
-viz.three.plots$timeSeries
-viz.three.plots$population
-
 viz.three.plots
 ```
 
 # Multi-panel data visualization (facets)
+
 ## Different geoms in each panel (aligned axes)
 
 ```{r}
@@ -155,10 +151,10 @@ add.x.var <- function(df, x.var){
     theme(panel.margin=grid::unit(0, "lines"))
   ))
 
-viz.aligned$scatter
 ```
 
 ## Same geoms in each panel (compare data subsets)
+
 ```{r}
 # I create a table that contains data in three years: 1975, 1985, 1995
 show.point.list <- list()
@@ -187,7 +183,5 @@ viz.panels <- list(
     theme(panel.margin=grid::unit(0, "lines"))
   )
 
-viz.panels$scatter
 structure(viz.panels, class="animint")
 ```
-
